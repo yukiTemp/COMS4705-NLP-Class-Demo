@@ -1,6 +1,8 @@
 import torch
 from torch.utils.data import DataLoader
-from transformers import BertForSequenceClassification, AdamW, get_linear_schedule_with_warmup
+from transformers import BertForSequenceClassification, get_linear_schedule_with_warmup
+from torch.optim import AdamW
+
 from sklearn.metrics import accuracy_score, f1_score
 import preprocess
 from dataset import SentimentDataset
@@ -49,6 +51,12 @@ def train(model, train_loader, val_loader, device, epochs=3, learning_rate=2e-5)
         print(f"  Validation F1-Score: {val_f1:.4f}")
 
 def main():
+    if torch.cuda.is_available():
+        print("✅ Using GPU:", torch.cuda.get_device_name(0))
+    else:
+        print("⚠️ Using CPU only")
+
+
     data_file = "data/training.1600000.processed.noemoticon.csv"
     print("Loading and preprocessing data...")
     df = preprocess.load_and_preprocess_data(data_file)
@@ -69,7 +77,8 @@ def main():
     model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=2)
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     model.to(device)
-    
+
+
     print("Starting training...")
     train(model, train_loader, val_loader, device, epochs=3, learning_rate=2e-5)
 
